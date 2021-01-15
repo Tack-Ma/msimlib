@@ -43,8 +43,13 @@ class Polygon:
         return numpy.sum(self.Io_detail, axis=1)
 
     @property
+    def Ig(self):
+        return self.Io - self.A * self.G**2
+
+    @property
     def S(self):
-        return numpy.prod(self._average, axis=1) @ self._diff * numpy.array([1, -1])
+        return numpy.sum(self.S_detail, axis=1)
+        # return numpy.prod(self._average, axis=1) @ self._diff * numpy.array([1, -1])
 
     @property
     def l(self):
@@ -72,7 +77,7 @@ class Polygon:
 
     @property
     def _x2y1(self):
-        return numpy.roll(self.plots[:, 0], -1) * self.plots[:, 1]
+        return numpy.roll(self.plots[:, 0], -1, axis=0) * self.plots[:, 1]
 
     @property
     def _sq(self):
@@ -96,11 +101,11 @@ class Polygon:
 
     @property
     def _nx(self):
-        return self.plots * numpy.roll(self.plots, -1)
+        return self.plots * numpy.roll(self.plots, -1, axis=0)
 
     @property
     def _sub_nx(self):
-        return self.plots + numpy.roll(self.plots, -1)
+        return self.plots + numpy.roll(self.plots, -1, axis=0)
 
     @property
     def _x1x2(self):
@@ -112,22 +117,35 @@ class Polygon:
 
     @property
     def Iy_detail(self):
-        return 1 / 4 * self._diff[:, 1] * self._sub_nx[:, 0] * (self._x2sq + self._x1sq)\
+        return 1 / 4 * self._diff[:, 1] * self._sub_nx[:, 0] * (self._x2sq + self._x1sq) \
                - 1 / 3 * (self._x1y2 - self._x2y1) * (self._x1sq + self._x1x2 + self._x2sq)
         # return - 1 / 3 * (self._x1y2 - self._x2y1) * (self._x1sq + self._x1x2 + self._x2sq)\
         #        - 1 / 4 * (self._x1y1 - self._x1y2 + self._x2y1 - self._x2y2)
 
     @property
     def Ix_detail(self):
-        # TODO: 計算誤り
-        return 1 / 4 * self._diff[:, 0] * self._sub_nx[:, 1] * (self._y2sq + self._y1sq) \
-               - 1 / 3 * (self._x2y1 - self._x1y2) * (self._y1sq + self._y1y2 + self._y2sq)
+        return -1 * (1 / 4 * self._diff[:, 0] * self._sub_nx[:, 1] * (self._y2sq + self._y1sq)
+                     + 1 / 3 * (self._x1y2 - self._x2y1) * (self._y1sq + self._y1y2 + self._y2sq))
         # return - 1 / 3 * (self._x2y1 - self._x1y2) * (self._y1sq + self._y1y2 + self._y2sq) \
         #        - 1 / 4 * (self._x1y1 + self._x1y2 - self._x2y1 - self._x2y2)
 
     @property
     def Io_detail(self):
         return numpy.stack([self.Ix_detail, self.Iy_detail])
+
+    @property
+    def _Sy_detail(self):
+        return 1 / 3 * self._diff[:, 1] * (self._x2sq + self._x1x2 + self._x1sq) \
+               - 1 / 2 * (self._x1y2 - self._x2y1) * self._sub_nx[:, 0]
+
+    @property
+    def _Sx_detail(self):
+        return - 1 * (1 / 3 * self._diff[:, 0] * (self._y2sq + self._y1y2 + self._y1sq)
+                      + 1 / 2 * (self._x1y2 - self._x2y1) * self._sub_nx[:, 1])
+
+    @property
+    def S_detail(self):
+        return numpy.stack([self._Sx_detail, self._Sy_detail])
 
     def reverse(self):
         return Polygon(numpy.roll(self.plots[::-1], 1, axis=0))
