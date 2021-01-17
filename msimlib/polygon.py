@@ -1,7 +1,39 @@
 import numpy
 
 
-class Polygon:
+def is_shape(obj):
+    if not isinstance(obj, Shape):
+        raise ValueError('Not Shape Object!')
+    return True
+
+
+class Shape:
+
+    @property
+    def A(self):
+        return None
+
+    @property
+    def G(self):
+        return None
+
+    @property
+    def Io(self):
+        return None
+
+    @property
+    def Ig(self):
+        return None
+
+    @property
+    def S(self):
+        return None
+
+    def reverse(self):
+        pass
+
+
+class Polygon(Shape):
 
     @classmethod
     def rectangle(cls, h, b, shift=(0, 0)):
@@ -17,10 +49,24 @@ class Polygon:
         self.plots = plots
 
     def __add__(self, other):
-        pass
+        is_shape(other)
+        new_region = Region()
+        new_region.fig.append(self)
+        if isinstance(other, Region):
+            new_region.fig.extend(other.fig)
+        else:
+            new_region.fig.append(other)
+        return new_region
 
     def __sub__(self, other):
-        pass
+        is_shape(other)
+        new_region = Region()
+        new_region.fig.append(self)
+        if isinstance(other, Region):
+            new_region.fig.extend(other.reverse().fig)
+        else:
+            new_region.fig.append(other.reverse())
+        return new_region
 
     @property
     def x(self):
@@ -149,3 +195,44 @@ class Polygon:
 
     def reverse(self):
         return Polygon(numpy.roll(self.plots[::-1], 1, axis=0))
+
+
+class Region(Shape):
+
+    def __init__(self):
+        self.fig = []
+
+    def __add__(self, other):
+        pass
+
+    def __sub__(self, other):
+        pass
+
+    @property
+    def A(self):
+        return None
+
+    @property
+    def G(self):
+        return None
+
+    @property
+    def Io(self):
+        return None
+
+    @property
+    def Ig(self):
+        return None
+
+    @property
+    def S(self):
+        return None
+
+    def add_shape(self, shape):
+        if isinstance(shape, Shape):
+            self.fig.append(shape)
+
+    def reverse(self):
+        new_region = Region()
+        new_region.fig = [fig.reverse() for fig in self.fig]
+        return new_region
